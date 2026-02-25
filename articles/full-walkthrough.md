@@ -8,8 +8,8 @@ A complete end-to-end walkthrough covering setup, architecture, and deployment.
 
 ## Step 2: Review the Architecture
 
-![Architecture diagram](media/retrieval-augmented-generation/architecture-diagram.png)
+![Diagram that shows a retrieval-augmented generation workflow where documents are chunked and embedded, embeddings are stored and searched to provide context for a chat-enabled large language model that generates responses.](media/retrieval-augmented-generation/architecture-diagram.png)
 
 ## Step 3: Deploy the Solution
 
-![Personalization architecture](media/solutions/personalization-architecture.svg)
+![Diagram that shows a real-time content personalization architecture with Azure Functions processing user activity, Azure DocumentDB storing user profiles, and Azure Cognitive Services providing personalization.](media/solutions/personalization-architecture.svg)
