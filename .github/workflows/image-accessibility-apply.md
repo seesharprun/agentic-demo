@@ -6,8 +6,7 @@ on:
     events: [issue_comment]
 engine:
   id: copilot
-  model: gpt-5-mini
-  agent: image-accessibility-processor
+  model: gpt-5
 permissions:
   contents: read
 tools:

@@ -23,11 +23,7 @@
 #
 # Scans repository images for accessibility issues and creates an audit issue with proposed alt-text improvements.
 #
-# Resolved workflow manifest:
-#   Imports:
-#     - ../agents/image-accessibility-processor.agent.md
-#
-# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"312f8030177ddfd97dbec3e26c4c235740f5e47921178f01a03473ad1635c8c3","compiler_version":"v0.50.3"}
+# gh-aw-metadata: {"schema_version":"v1","frontmatter_hash":"3856dfbf4329c69d5ebf4e2ee6f53a5e0e54c8b027596fdc1d1464a25998ac51","compiler_version":"v0.50.3"}
 
 name: "Image Accessibility Audit"
 "on":
@@ -146,9 +142,6 @@ jobs:
           GH_AW_PROMPT_EOF
           cat << 'GH_AW_PROMPT_EOF'
           </system>
-          GH_AW_PROMPT_EOF
-          cat << 'GH_AW_PROMPT_EOF'
-          {{#runtime-import ../agents/image-accessibility-processor.agent.md}}
           GH_AW_PROMPT_EOF
           cat << 'GH_AW_PROMPT_EOF'
           {{#runtime-import .github/workflows/image-accessibility-audit.md}}
