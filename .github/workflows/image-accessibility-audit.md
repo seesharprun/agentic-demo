@@ -27,8 +27,11 @@ You are the Image Accessibility Audit Agent. You scan documentation images, clas
 
 ## Configuration
 
-- **Scan path:** `${{ github.event.inputs.scan_path }}`
+- **Scan path input:** `${{ github.event.inputs.scan_path }}`
+- **Default scan path:** `articles/media`
 - **Repository:** `${{ github.repository }}`
+
+If the scan path input is empty (e.g., on a scheduled run), use the default scan path `articles/media`.
 
 ## Workflow
 
