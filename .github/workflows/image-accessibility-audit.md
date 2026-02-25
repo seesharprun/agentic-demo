@@ -12,7 +12,8 @@ on:
 engine:
   id: copilot
   model: gpt-5-mini
-  agent: image-accessibility-processor
+imports:
+  - ../agents/image-accessibility-processor.agent.md
 permissions:
   contents: read
 tools:
@@ -22,6 +23,10 @@ safe-outputs:
     title-prefix: "[a11y] "
     labels: [accessibility, automation]
     close-older-issues: true
+mcp-servers:
+  microsoft-learn:
+    url: "https://learn.microsoft.com/api/mcp"
+    allowed: ["*"]
 ---
 
 # Image Accessibility Audit
@@ -50,6 +55,26 @@ find . -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.svg' \) | grep -E '
 
 Collect the resulting file paths into a list. Strip the leading `./` prefix from each path.
 
+### Step 1b: Pre-classify images using file metadata
+
+Before analyzing image content, assign a **category hint** to each discovered image based on its filename, directory path, and file size. Run a single bash command to collect sizes:
+
+```bash
+for f in <all-image-paths>; do echo "$f $(du -h "$f" | cut -f1)"; done
+```
+
+Apply these heuristics to assign the hint:
+
+| Heuristic | Category hint |
+|---|---|
+| Filename contains `icon`, `logo`, `check`, `yes`, `no`, `badge`, `bullet`, `appliesto`, `status` | `decorative` |
+| SVG file under 5 KB | `decorative` |
+| Parent directory named `architecture`, `diagram`, `flow`, `overview`, `solution`, `solutions` | `diagram` |
+| Parent directory named `screenshot`, `portal`, `ui` | `screenshot` |
+| All others | `needs-review` |
+
+Record the category hint and file size alongside each image path. These hints are a **starting point** — the agent refines the classification with actual image analysis in Step 4.
+
 ### Step 2: Recover previously improved images
 
 Search for the most recent open issue with `[a11y]` in the title created by this workflow. You can find it by looking for issues containing the workflow-id marker `<!-- gh-aw-workflow-id: image-accessibility-audit -->` in their body.
@@ -73,10 +98,12 @@ For each image file in the filtered list:
 
 1. **Read the image file** using the `read` tool. This gives you vision access to the image content.
 
-2. **Classify** the image as exactly one of:
-   - `decorative` — logos, status icons, small inline symbols that add no unique instructional meaning. Filename hints: `*-icon.*`, `*-logo.*`, `check.*`, `yes.*`, `no.*`, `status-*`.
+2. **Classify** the image as exactly one of, using the category hint from Step 1b as a starting point:
+   - `decorative` — logos, status icons, small inline symbols that add no unique instructional meaning. Pre-classified by filename/directory/size heuristics in Step 1b.
    - `screenshot` — UI screenshots, terminal/CLI captures, product surfaces.
    - `diagram` — architecture diagrams, flowcharts, decision trees, conceptual diagrams.
+
+   The agent's visual analysis overrides the hint when they disagree (e.g., a file in an `overview/` directory that is actually a screenshot).
 
 3. **Find referencing Markdown files** — Use `execute` to run:
    ```bash
