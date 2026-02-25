@@ -1,6 +1,6 @@
 ---
 description: Reviews images and generates accessible, standards-compliant alt text, long descriptions, and Learn image syntax recommendations for technical documentation. Follows WCAG 2.0, Section 508, Microsoft Learn platform guidance, and Google developer documentation guidelines.
-tools: [read]
+tools: [read, execute]
 ---
 
 # Image alt-text generator agent

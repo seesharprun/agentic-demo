@@ -157,6 +157,20 @@ No items applied yet.
 
 ---
 
+## 📊 Compliance
+
+**Total images discovered:** <TOTAL> (including sufficient, insufficient, generated, decorative, and previously improved)
+
+| Status | Count | % of Total |
+|--------|------:|----------:|
+| ✅ Compliant (sufficient + previously improved + decorative) | <N> | <X>% |
+| ⚠️ Needs improvement (insufficient + generated) | <N> | <X>% |
+
+**Current compliance:** <N>/<TOTAL> (<X>%)
+**Potential compliance (if all items above are approved):** <N+needs_improvement>/<TOTAL> (<Y>%)
+
+---
+
 > [!IMPORTANT]
 > 🔲 **Check the boxes** next to the images you want to fix, then comment **`/apply`** to create draft pull requests.
 >
