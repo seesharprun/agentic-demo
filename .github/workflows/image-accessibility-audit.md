@@ -9,11 +9,14 @@ on:
         required: false
         type: string
         default: 'articles/media'
+engine:
+  id: copilot
+  model: gpt-5-mini
+  agent: image-accessibility-processor
 permissions:
   contents: read
 tools:
   bash: [":*"]
-  cache-memory:
 safe-outputs:
   create-issue:
     title-prefix: "[a11y] "
@@ -87,33 +90,21 @@ For each image file in the filtered list:
    ```
    Parse the `![alt-text](path)` syntax to extract the current alt-text string.
 
-5. **Evaluate or generate alt-text** following these rules:
-
-   **Alt-text quality rules (all must pass for "sufficient"):**
-   - Length is 40–150 characters
-   - Starts with an informative type phrase: "Screenshot of...", "Diagram that shows...", "Diagram of...", etc.
-   - Does NOT start with "Image" or "Graphic"
-   - Ends with a period
-   - Names specific products, services, or components shown
-   - Describes purpose and meaning, not just appearance
+5. **Evaluate or generate alt-text** — Apply the alt-text quality rules from your agent instructions (40–150 chars, starts with type phrase, ends with period, names specific products, etc.).
 
    **If existing alt-text passes ALL checks:** status = `sufficient`. Keep the existing alt-text.
    **If existing alt-text fails ANY check:** status = `insufficient`. Generate improved alt-text that preserves the intent and key details from the original.
    **If no existing alt-text:** status = `generated`. Generate new alt-text.
 
-6. **Generate long description** (diagrams only):
-   - One concise paragraph
-   - Expands beyond alt-text; does not repeat it verbatim
-   - Describes relationships, flow direction, and key components
-   - Includes important labels or values visible in the diagram
+6. **Generate long description** (diagrams only) — Apply the long description rules from your agent instructions.
 
-7. **For decorative images:** status = `decorative`. No alt-text or description needed.
+7. **For decorative images:** status = `decorative`. No alt-text or description needed. Use the decorative image identification heuristics from your agent instructions.
 
 ### Step 5: Build the issue body
 
 Generate the issue body in this exact structure:
 
-```markdown
+``````markdown
 # Image Accessibility Audit — <TODAY'S DATE>
 
 ## Summary
@@ -128,11 +119,7 @@ Generate the issue body in this exact structure:
 
 ## Audit Results
 
-<FOR EACH REFERENCING MARKDOWN FILE, CREATE A SECTION>
-
-### <relative/path/to/article.md>
-
-<FOR EACH IMAGE REFERENCED IN THIS ARTICLE>
+<FOR EACH IMAGE (grouped by image path, NOT by article)>
 
 - [ ] **<image-path>** (<type>)
   - Current: `<current alt-text or "(none)">`
@@ -143,9 +130,17 @@ Generate the issue body in this exact structure:
   <IF TYPE IS diagram AND STATUS IS NOT decorative>
   - Proposed long desc: `<proposed long description>`
   <END IF>
+  - Referenced in: `<article-1.md>`, `<article-2.md>`, ...
 
 <END FOR EACH IMAGE>
-<END FOR EACH ARTICLE>
+
+## 🎨 Decorative Images
+
+The following images were classified as decorative and require no alt-text changes:
+
+<FOR EACH DECORATIVE IMAGE>
+- **<image-path>** — Referenced in: `<article-1.md>`, `<article-2.md>`, ...
+<END FOR>
 
 <!-- applied-status -->
 No items applied yet.
@@ -161,17 +156,21 @@ No items applied yet.
 </details>
 
 ---
-**To apply approved changes:** Check the boxes above for changes you approve, then comment `/apply`.
-```
+
+> [!IMPORTANT]
+> 🔲 **Check the boxes** next to the images you want to fix, then comment **`/apply`** to create draft pull requests.
+>
+> The proposed alt-text will be applied to **all** Markdown files that reference each checked image.
+``````
 
 **Important formatting rules for the issue body:**
-- Each image gets its own checkbox line (`- [ ]`)
-- Group images under the Markdown file that references them (use `###` heading with the file path)
-- If an image is referenced by multiple articles, list it under each article
+- Each image gets its own checkbox line (`- [ ]`) — group by **image path**, not by article
+- One checkbox per unique image. List all referencing articles on the `Referenced in:` line
+- The same proposed alt-text will be applied to every article that uses the image
+- **Do NOT include decorative images in the checkbox list.** List them separately in the "🎨 Decorative Images" section with no checkbox since no action is needed
+- Images with `sufficient` status should still appear in the checkbox list but with no "Proposed" line
 - The `<!-- applied-status -->` island is used by the `/apply` workflow to update status
 - The `<details>` section MUST contain valid JSON — this is how the next run avoids re-scanning improved images
-- Decorative images should still appear in the list but noted as "(decorative — no alt-text needed)"
-- Images with `sufficient` status should still appear but with no "Proposed" line
 
 ### Step 6: Create the issue
 

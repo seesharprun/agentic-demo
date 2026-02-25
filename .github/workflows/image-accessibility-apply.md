@@ -4,11 +4,14 @@ on:
   slash_command:
     name: apply
     events: [issue_comment]
+engine:
+  id: copilot
+  model: gpt-5-mini
+  agent: image-accessibility-processor
 permissions:
   contents: read
 tools:
   bash: [":*"]
-  cache-memory:
 safe-outputs:
   create-pull-request:
     title-prefix: "[a11y] "
@@ -33,10 +36,11 @@ You are the Image Accessibility Apply Agent. When a human comments `/apply` on a
 ## Context
 
 The triggering issue was created by the `image-accessibility-audit` workflow. Its body contains:
-- Checkbox items (`- [x]` for approved, `- [ ]` for unapproved) grouped under article path headings
-- Each checkbox item has the image path, type, current alt-text, and proposed alt-text
+- Checkbox items (`- [x]` for approved, `- [ ]` for unapproved) grouped by **image path** (not by article)
+- Each checkbox item has the image path, type, current alt-text, proposed alt-text, and a `Referenced in:` line listing all Markdown files that use the image
 - An `<!-- applied-status -->` island for tracking apply progress
 - A `<details>` section with a JSON array of previously improved images
+- Decorative images are listed separately without checkboxes — ignore them
 
 The triggering comment is: "${{ needs.activation.outputs.text }}"
 
@@ -50,16 +54,16 @@ Read the triggering issue body. Identify all **checked** checkboxes — lines ma
 
 For each checked item, extract:
 - **Image path** — the bold text after the checkbox (e.g., `media/retrieval-augmented-generation/architecture-diagram.png`)
-- **Image type** — the parenthetical after the path (e.g., `diagram`, `screenshot`, `decorative`)
-- **Article path** — the `###` heading above the checkbox (e.g., `articles/full-walkthrough.md`)
+- **Image type** — the parenthetical after the path (e.g., `diagram`, `screenshot`)
 - **Proposed alt-text** — the line starting with `- Proposed alt:` with the backtick-wrapped text
 - **Proposed long description** — the line starting with `- Proposed long desc:` if present (diagrams only)
+- **Referenced articles** — the `- Referenced in:` line listing comma-separated Markdown file paths (e.g., `articles/full-walkthrough.md`, `articles/getting-started.md`)
 
 If no checkboxes are checked, call `noop` with message: "No items were checked for application. Check the boxes next to approved changes and comment /apply again." Then stop.
 
 ### Step 2: Group by article
 
-Group the approved changes by their article Markdown file path.
+Expand the checked images into per-article changes: for each checked image, create a change entry for **every** article listed in its `Referenced in:` line. Then group all change entries by article Markdown file path.
 
 Apply the configured batch limit: if there are more than 10 Markdown files with changes, process only the first 10 in this run. Note the remaining files in the apply-status update so the human knows to run `/apply` again.
 
@@ -75,7 +79,6 @@ For each article file:
    - Change the text between `![` and `]` to the proposed alt-text
    - Do NOT change the path in parentheses
    - Do NOT convert to `:::image:::` syntax — keep standard Markdown
-   - If the image is `decorative`, set alt-text to empty: `![](path)`
 
 4. **Stage the changes** using git commands via `execute`:
    ```bash
@@ -170,5 +173,4 @@ This tells the human reviewer they need another `/apply` round.
 - **Standard Markdown only.** Use `![alt](path)` syntax. Do not convert to `:::image:::` Learn syntax.
 - **Preserve file formatting.** Do not reformat or restructure the Markdown file beyond the alt-text changes.
 - **Be precise with replacements.** Match the exact `![...](...)` pattern. There may be multiple image references per file.
-- **Decorative images** should have empty alt-text: `![](path)`.
 - If no action is needed, you MUST call the `noop` tool with a message explaining why.

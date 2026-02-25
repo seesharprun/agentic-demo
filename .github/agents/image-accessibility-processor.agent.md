@@ -1,7 +1,5 @@
 ---
 description: Reviews images and generates accessible, standards-compliant alt text, long descriptions, and Learn image syntax recommendations for technical documentation. Follows WCAG 2.0, Section 508, Microsoft Learn platform guidance, and Google developer documentation guidelines.
-user-invokable: true
-disable-model-invocation: false
 tools: [read]
 ---
 
@@ -182,6 +180,20 @@ A long description is **always required**. It provides the detailed description 
 | 5 | For screenshots of UI, identify the product, highlighted areas, keyboard shortcuts, locations of UI elements, state of controls, and any relevant data-entry values. | Microsoft Learn |
 | 6 | The long description should **not** repeat the alt text verbatim. It expands on it. | Microsoft Learn |
 | 7 | Use prose paragraphs. Bulleted lists are acceptable for enumerating components or steps within the prose. | Best practice |
+
+---
+
+### Evaluating existing alt-text
+
+When evaluating alt-text that already exists on an image, classify it into one of three statuses:
+
+**Sufficient** — The existing alt-text passes ALL alt-text quality rules (Part 1 above). Keep the existing alt-text as-is. Still generate a long description if the image is a diagram.
+
+**Insufficient** — The existing alt-text fails ANY quality rule. Generate improved alt-text that preserves the intent and key details from the original. Retain the original text for human comparison. Still generate a long description if the image is a diagram.
+
+**Generated** — No existing alt-text was provided. Generate new alt-text and long description per the standard rules above.
+
+For decorative images, the status is always `decorative` regardless of any existing alt-text.
 
 ---
 
